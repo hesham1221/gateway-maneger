@@ -13,12 +13,12 @@ export class HttpExceptionFilter {
     const httpCtx = host.switchToHttp();
     const response = httpCtx.getResponse();
     if (exception instanceof HttpException) {
-      this.handleHttpException(exception);
+      return this.handleHttpException(exception);
     } else {
-      this.handleGenericError(exception, host);
+      return this.handleGenericError(exception, host);
     }
-    response.status(this.response.code).json(this.response);
-    return this.response;
+    // response.status(this.response.code).json(this.response);
+    // return this.response;
   }
 
   private handleHttpException(exception: HttpException) {
@@ -43,7 +43,12 @@ export class HttpExceptionFilter {
     this.logError(`Message: ${exception.message}`, exception);
     const httpCtx = host.switchToHttp();
     const response = httpCtx.getResponse();
-    response.end('Something went wrong!');
+    const responseMessage = exception.message.includes(
+      'no such file or directory'
+    )
+      ? 'File not found'
+      : 'Something went wrong!';
+    response.end(responseMessage);
     return this.response;
   }
 

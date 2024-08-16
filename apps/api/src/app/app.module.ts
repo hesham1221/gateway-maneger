@@ -8,6 +8,8 @@ import { GatewayModule } from './gateway/gateway.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from '../libs/exception/exception-filter';
 import { ResponseMappingInterceptor } from '../libs/interceptors/response.interceptor';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -19,6 +21,9 @@ import { ResponseMappingInterceptor } from '../libs/interceptors/response.interc
         uri: configService.get<string>('MONGODB_URI'),
       }),
       inject: [ConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(),'apps' , 'api' , 'src', 'public'),
     }),
     GatewayModule,
   ],
