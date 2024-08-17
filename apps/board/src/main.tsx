@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './styles/tailwind.css';
-import Index from './app/routes/index';
+import Index from './app/routes/Index';
 import SingleGateway from './app/routes/SingleGateway';
 import CreateGateWayPage from './app/routes/CreateGatewayPage';
 import Layout from './app/Layout';
