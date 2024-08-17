@@ -14,7 +14,7 @@ export class IsIPv4Constraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage() {
-    return 'Text ($value) is not a valid IPv4 address';
+    return '$value is not a valid IPv4 address';
   }
 }
 

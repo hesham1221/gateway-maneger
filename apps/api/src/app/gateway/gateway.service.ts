@@ -29,21 +29,29 @@ export class GatewayService {
         'A gateway cannot have more than 10 peripheral devices.'
       );
     const existingSerialNumber = await this.gatewayModel.findOne({
-      serialNumber: createGatewayDto.serialNumber,
+      $or: [
+        { serialNumber: createGatewayDto.serialNumber },
+        { name: createGatewayDto.name },
+      ],
     });
-    if (existingSerialNumber)
-      throw new BadRequestException(
-        'A gateway with the same serial number already exists.'
-      );
+    if (existingSerialNumber) {
+      if (existingSerialNumber.name === createGatewayDto.name)
+        throw new BadRequestException(
+          'A gateway with the same name already exists.'
+        );
+      if (existingSerialNumber.serialNumber === createGatewayDto.serialNumber)
+        throw new BadRequestException(
+          'A gateway with the same serial number already exists.'
+        );
+    }
     if (createGatewayDto.devices.length > 10)
       throw new BadRequestException(
         'A gateway cannot have more than 10 peripheral devices.'
       );
     const devices = await Promise.all(
-      createGatewayDto.devices.map(async (deviceDto) => {
-        const newDevice = new this.peripheralDeviceModel(deviceDto);
-        return await newDevice.save();
-      })
+      createGatewayDto.devices.map((device) =>
+        this.peripheralDeviceModel.create(device)
+      )
     );
     const createdGateway = new this.gatewayModel({
       ...createGatewayDto,
@@ -74,9 +82,16 @@ export class GatewayService {
     return paginate(gateways, filter.page, filter.limit, total);
   }
 
-  async getGateway(id: string): Promise<Gateway> {
-    const gateway = this.gatewayModel.findById(id).populate('devices').exec();
+  async getGateway(name: string): Promise<Gateway> {
+    const gateway = await this.gatewayModel
+      .findOne({ name })
+      .populate('devices')
+      .exec();
     if (!gateway) throw new NotFoundException('Gateway not found');
+    if (gateway.devices.length !== 0)
+      gateway.devices = await this.peripheralDeviceModel
+        .find({ _id: { $in: gateway.devices } })
+        .exec();
     return gateway;
   }
 
@@ -103,8 +118,13 @@ export class GatewayService {
   async removePeripheralDevice(gatewayId: string, peripheralDeviceId: string) {
     const gateway = await this.gatewayModel.findById(gatewayId).exec();
     if (!gateway) throw new NotFoundException('Gateway not found.');
+    const peripheralDevice = await this.peripheralDeviceModel.findOne({
+      uid: +peripheralDeviceId,
+    });
+    if (!peripheralDevice)
+      throw new NotFoundException('Peripheral device not found.');
     gateway.devices = gateway.devices.filter(
-      (device) => device.uid.toString() !== peripheralDeviceId
+      (device) => device !== peripheralDevice._id
     );
     await this.peripheralDeviceModel
       .findOneAndDelete({ uid: +peripheralDeviceId })

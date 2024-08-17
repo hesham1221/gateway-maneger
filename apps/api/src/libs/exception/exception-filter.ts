@@ -10,18 +10,12 @@ export class HttpExceptionFilter {
   private readonly logger: Logger = new Logger(HttpExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
-    const httpCtx = host.switchToHttp();
-    const response = httpCtx.getResponse();
-    if (exception instanceof HttpException) {
-      return this.handleHttpException(exception);
-    } else {
-      return this.handleGenericError(exception, host);
-    }
-    // response.status(this.response.code).json(this.response);
-    // return this.response;
+    if (exception instanceof HttpException)
+      return this.handleHttpException(exception , host);
+    else return this.handleGenericError(exception, host);
   }
 
-  private handleHttpException(exception: HttpException) {
+  private handleHttpException(exception: HttpException , host: ArgumentsHost) {
     const messageKey = exception.getResponse()['message']
       ? Array.isArray(exception.getResponse()['message'])
         ? exception.getResponse()['message'][0]
@@ -30,6 +24,9 @@ export class HttpExceptionFilter {
     this.logHttpException(exception);
     this.response.code = exception.getStatus();
     this.response.message = messageKey;
+    const httpCtx = host.switchToHttp();
+    const response = httpCtx.getResponse();
+    response.json(this.response);
     return this.response;
   }
 

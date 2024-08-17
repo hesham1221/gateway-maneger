@@ -26,15 +26,15 @@ export class GatewayController {
   }
 
   @Get()
-  @ApiResponseDecorator([Gateway] , true)
+  @ApiResponseDecorator([Gateway], true)
   async getAllGateways(@Query() filter: GetGatewaysFilter) {
     return this.gatewayService.getAllGateways(filter);
   }
 
-  @Get(':id')
+  @Get(':name')
   @ApiResponseDecorator(Gateway)
-  async getGateway(@Param('id') id: string) {
-    return this.gatewayService.getGateway(id);
+  async getGateway(@Param('name') name: string) {
+    return this.gatewayService.getGateway(name);
   }
 
   @Post(':id/devices')
